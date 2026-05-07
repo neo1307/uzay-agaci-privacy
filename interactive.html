@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uzay Ağacı — Sesini Evrene Bırak</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --purple: #8B7CF6;
+            --teal: #4CC9B0;
+            --bg: #09090F;
+            --text: #F2F2F7;
+            --muted: #8E8EA8;
+            --subtle: #C8C8D4;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* ── Canvas ── */
+        #bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ── Nav ── */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 22px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(9,9,15,0.9) 0%, transparent 100%);
+            backdrop-filter: blur(0px);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--purple);
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .logo-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple), var(--teal));
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 36px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--purple); }
+
+        /* ── Hero ── */
+        .hero {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 24px;
+            pointer-events: none;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(139, 124, 246, 0.08);
+            border: 1px solid rgba(139, 124, 246, 0.25);
+            border-radius: 100px;
+            padding: 7px 18px;
+            font-size: 11px;
+            color: var(--purple);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 36px;
+            animation: fadeDown 1s ease both;
+        }
+
+        .badge-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--teal);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .hero h1 {
+            font-size: clamp(52px, 9vw, 100px);
+            font-weight: 900;
+            letter-spacing: -3px;
+            line-height: 0.95;
+            margin-bottom: 28px;
+            animation: fadeUp 1s ease 0.15s both;
+            background: linear-gradient(135deg, #ffffff 0%, var(--purple) 45%, var(--teal) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: clamp(15px, 2.2vw, 20px);
+            color: var(--muted);
+            max-width: 440px;
+            line-height: 1.65;
+            animation: fadeUp 1s ease 0.3s both;
+            margin-bottom: 52px;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 14px;
+            pointer-events: all;
+            animation: fadeUp 1s ease 0.45s both;
+        }
+
+        .btn {
+            padding: 13px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-fill {
+            background: linear-gradient(135deg, var(--purple), #6c5ce7);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(139,124,246,0.25);
+        }
+
+        .btn-fill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 36px rgba(139,124,246,0.45);
+        }
+
+        .btn-ghost {
+            background: rgba(255,255,255,0.04);
+            color: var(--subtle);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+            color: var(--text);
+        }
+
+        /* ── Scroll hint ── */
+        .scroll-hint {
+            position: fixed;
+            bottom: 36px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            animation: fadeIn 1s ease 1.8s both;
+        }
+
+        .scroll-hint span {
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .scroll-line {
+            width: 1px;
+            height: 36px;
+            background: linear-gradient(to bottom, var(--purple), transparent);
+            animation: scrollBob 2.2s ease-in-out infinite;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            position: relative;
+            z-index: 10;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(139,124,246,0.2), transparent);
+            margin: 0 80px;
+        }
+
+        /* ── Section ── */
+        section {
+            position: relative;
+            z-index: 10;
+        }
+
+        .section-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .section-eyebrow {
+            text-align: center;
+            font-size: 11px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--teal);
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: clamp(30px, 4.5vw, 48px);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            color: var(--text);
+            margin-bottom: 68px;
+            line-height: 1.1;
+        }
+
+        /* ── Features ── */
+        #features { padding: 140px 0 100px; }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(255,255,255,0.055);
+            border-radius: 18px;
+            padding: 30px 28px;
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.55s ease, transform 0.55s ease,
+                        border-color 0.25s, background 0.25s;
+        }
+
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card:hover {
+            border-color: rgba(139,124,246,0.28);
+            background: rgba(139,124,246,0.04);
+            transform: translateY(-3px);
+        }
+
+        .card-icon {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(135deg,
+                rgba(139,124,246,0.18), rgba(76,201,176,0.18));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 18px;
+        }
+
+        .card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .card p {
+            font-size: 13.5px;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        /* ── How it works ── */
+        #how { padding: 80px 0 120px; }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            position: relative;
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 28px;
+            left: calc(16.66% + 24px);
+            right: calc(16.66% + 24px);
+            height: 1px;
+            background: linear-gradient(to right, var(--purple), var(--teal));
+            opacity: 0.35;
+        }
+
+        .step {
+            text-align: center;
+            padding: 0 24px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.55s ease, transform 0.55s ease;
+        }
+
+        .step.visible { opacity: 1; transform: translateY(0); }
+
+        .step-num {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(139,124,246,0.15), rgba(76,201,176,0.15));
+            border: 1px solid rgba(139,124,246,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--purple);
+            margin: 0 auto 24px;
+        }
+
+        .step h3 {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .step p {
+            font-size: 13.5px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* ── Stats ── */
+        .stats-band {
+            position: relative;
+            z-index: 10;
+            padding: 60px 0;
+            background: linear-gradient(to right,
+                rgba(139,124,246,0.05), rgba(76,201,176,0.05));
+            border-top: 1px solid rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .stats-grid {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            gap: 40px;
+            flex-wrap: wrap;
+            padding: 0 40px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: clamp(36px, 5vw, 52px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, var(--purple), var(--teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .stat-lbl {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Privacy bar ── */
+        .privacy-bar {
+            position: relative;
+            z-index: 10;
+            padding: 80px 40px;
+            text-align: center;
+        }
+
+        .privacy-bar p {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 14px;
+        }
+
+        .privacy-links {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .privacy-links a {
+            color: var(--purple);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(139,124,246,0.25);
+            padding-bottom: 1px;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .privacy-links a:hover {
+            border-color: var(--purple);
+            color: #a99df8;
+        }
+
+        /* ── Footer ── */
+        footer {
+            position: relative;
+            z-index: 10;
+            padding: 28px 48px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        footer p {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        footer a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+
+        footer a:hover { color: var(--purple); }
+
+        /* ── Click particles ── */
+        .spark {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* ── Cursor glow ── */
+        #cursor-glow {
+            position: fixed;
+            width: 300px; height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139,124,246,0.07) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.6; transform: scale(0.85); }
+        }
+
+        @keyframes scrollBob {
+            0%, 100% { opacity: 0.25; transform: scaleY(0.7); }
+            50%       { opacity: 1;    transform: scaleY(1); }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            nav { padding: 18px 24px; }
+            .nav-links { display: none; }
+            .features-grid { grid-template-columns: 1fr; }
+            .steps { grid-template-columns: 1fr; gap: 48px; }
+            .steps::before { display: none; }
+            footer { padding: 24px; flex-direction: column; text-align: center; }
+        }
+
+        @media (max-width: 560px) {
+            .cta-group { flex-direction: column; align-items: stretch; text-align: center; }
+            .section-inner { padding: 0 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div id="cursor-glow"></div>
+
+<!-- ── Navigation ── -->
+<nav>
+    <a href="#" class="logo">
+        <div class="logo-dot"></div>
+        Uzay Ağacı
+    </a>
+    <ul class="nav-links">
+        <li><a href="#features">Özellikler</a></li>
+        <li><a href="#how">Nasıl Çalışır</a></li>
+        <li><a href="index.html">Gizlilik</a></li>
+        <li><a href="child-safety/index.html">Güvenlik</a></li>
+    </ul>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+    <div class="badge">
+        <div class="badge-dot"></div>
+        Anonim · Özgür · Güvenli
+    </div>
+    <h1>Uzay&nbsp;Ağacı</h1>
+    <p class="hero-sub">Sesini evrene bırak. Kimliğin gizli kalırken düşüncelerini, duygularını ve anlarını paylaş.</p>
+    <div class="cta-group">
+        <a href="#features" class="btn btn-fill">Keşfet</a>
+        <a href="index.html" class="btn btn-ghost">Gizlilik Politikası</a>
+    </div>
+</section>
+
+<div class="scroll-hint">
+    <span>Kaydır</span>
+    <div class="scroll-line"></div>
+</div>
+
+<!-- ── Features ── -->
+<section id="features">
+    <div class="section-inner">
+        <div class="section-eyebrow">Özellikler</div>
+        <h2 class="section-title">Neden Uzay Ağacı?</h2>
+        <div class="features-grid">
+            <div class="card" style="transition-delay:0s">
+                <div class="card-icon">🎙️</div>
+                <h3>Anonim Ses Paylaşımı</h3>
+                <p>Kimliğini açıklamadan sesini dünyayla paylaş. Sadece anonim bir ID ile kayıt oluştur, hiçbir kişisel bilgi gerekmez.</p>
+            </div>
+            <div class="card" style="transition-delay:0.08s">
+                <div class="card-icon">🛡️</div>
+                <h3>Tam Gizlilik</h3>
+                <p>Kişisel veri toplamıyoruz. Firebase Anonymous Auth ile güvenli, kimliksiz bir deneyim sunuyoruz.</p>
+            </div>
+            <div class="card" style="transition-delay:0.16s">
+                <div class="card-icon">🌌</div>
+                <h3>Evren Kadar Özgür</h3>
+                <p>Kategorilere göre keşfet, dinle, tepki ver. Sonsuz sesler, sonsuz hikayeler seni bekliyor.</p>
+            </div>
+            <div class="card" style="transition-delay:0.24s">
+                <div class="card-icon">🔒</div>
+                <h3>Güvenli Topluluk</h3>
+                <p>PII algılama sistemi ve moderasyon araçlarıyla güvenli bir ses topluluğu oluşturuyoruz.</p>
+            </div>
+            <div class="card" style="transition-delay:0.32s">
+                <div class="card-icon">☁️</div>
+                <h3>Bulut Altyapı</h3>
+                <p>Google Cloud Firestore ve Cloudinary ile verileriniz güvenle, şifreli olarak Avrupa sunucularında saklanır.</p>
+            </div>
+            <div class="card" style="transition-delay:0.4s">
+                <div class="card-icon">🎵</div>
+                <h3>Zengin Sesler</h3>
+                <p>Müzik, hikaye, düşünce, şiir… Her ses türü için özel kategoriler ve keşif akışı.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="divider" style="margin-top:80px"></div>
+
+<!-- ── How it works ── -->
+<section id="how">
+    <div class="section-inner">
+        <div class="section-eyebrow">Nasıl Çalışır</div>
+        <h2 class="section-title">Üç adımda başla</h2>
+        <div class="steps">
+            <div class="step" style="transition-delay:0s">
+                <div class="step-num">1</div>
+                <h3>Aç</h3>
+                <p>Uygulamayı indir. Kayıt ol, şifre yok, e-posta yok. Sadece bir dokunuş.</p>
+            </div>
+            <div class="step" style="transition-delay:0.12s">
+                <div class="step-num">2</div>
+                <h3>Kaydet</h3>
+                <p>Aklındakileri sesli olarak kaydet. İstersen özel tut, istersen herkesle paylaş.</p>
+            </div>
+            <div class="step" style="transition-delay:0.24s">
+                <div class="step-num">3</div>
+                <h3>Keşfet</h3>
+                <p>Başkalarının seslerini dinle, tepki ver, evreni doldur.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Stats ── -->
+<div class="stats-band">
+    <div class="stats-grid">
+        <div class="stat">
+            <div class="stat-val">100%</div>
+            <div class="stat-lbl">Anonim</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val">0</div>
+            <div class="stat-lbl">Kişisel Veri</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val">TLS</div>
+            <div class="stat-lbl">Şifreli Aktarım</div>
+        </div>
+        <div class="stat">
+            <div class="stat-val">∞</div>
+            <div class="stat-lbl">Özgürlük</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Privacy bar ── -->
+<div class="privacy-bar">
+    <p>Verileriniz sizin, gizliliğiniz önceliğimiz.</p>
+    <div class="privacy-links">
+        <a href="index.html">Gizlilik Politikası →</a>
+        <a href="child-safety/index.html">Çocuk Güvenliği →</a>
+        <a href="mailto:dayiugur7@gmail.com">İletişim →</a>
+    </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer>
+    <p>© 2026 Uzay Ağacı. Tüm hakları saklıdır.</p>
+    <div style="display:flex;gap:24px">
+        <a href="index.html">Gizlilik</a>
+        <a href="child-safety/index.html">Güvenlik</a>
+        <a href="mailto:dayiugur7@gmail.com">İletişim</a>
+    </div>
+</footer>
+
+<!-- ── Three.js ── -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    // ── Renderer ─────────────────────────────────────────────────
+    const canvas = document.getElementById('bg');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x09090F, 1);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x09090F, 0.028);
+
+    const camera = new THREE.PerspectiveCamera(
+        58, window.innerWidth / window.innerHeight, 0.1, 300
+    );
+    camera.position.set(0, 0.5, 9);
+
+    // ── Lights ───────────────────────────────────────────────────
+    scene.add(new THREE.AmbientLight(0x8B7CF6, 0.4));
+
+    const purpleLight = new THREE.PointLight(0x8B7CF6, 4, 22);
+    purpleLight.position.set(-4, 4, 4);
+    scene.add(purpleLight);
+
+    const tealLight = new THREE.PointLight(0x4CC9B0, 2.5, 18);
+    tealLight.position.set(4, -2, 3);
+    scene.add(tealLight);
+
+    const coreLight = new THREE.PointLight(0xffffff, 1.2, 6);
+    coreLight.position.set(0, 0.5, 0);
+    scene.add(coreLight);
+
+    // ── Stars ────────────────────────────────────────────────────
+    (function buildStars() {
+        const N = 9000;
+        const pos = new Float32Array(N * 3);
+        const col = new Float32Array(N * 3);
+        const palette = [
+            new THREE.Color(0xffffff),
+            new THREE.Color(0xB8A8FF),
+            new THREE.Color(0x8B7CF6),
+            new THREE.Color(0x4CC9B0),
+            new THREE.Color(0xD4F0FF),
+        ];
+
+        for (let i = 0; i < N; i++) {
+            const th = Math.random() * Math.PI * 2;
+            const ph = Math.acos(2 * Math.random() - 1);
+            const r  = 40 + Math.random() * 120;
+            pos[i*3]   = r * Math.sin(ph) * Math.cos(th);
+            pos[i*3+1] = r * Math.sin(ph) * Math.sin(th);
+            pos[i*3+2] = r * Math.cos(ph);
+            const c = palette[Math.floor(Math.random() * palette.length)];
+            col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+        }
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+
+        const mat = new THREE.PointsMaterial({
+            size: 0.18,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.85,
+            sizeAttenuation: true,
+        });
+
+        scene.add(new THREE.Points(geo, mat));
+    }());
+
+    // ── Nebula clouds ────────────────────────────────────────────
+    (function buildNebula() {
+        const nebColors = [0x3d1f8f, 0x1a5060, 0x2a0a5a, 0x0a3a30];
+        nebColors.forEach((c, i) => {
+            const geo = new THREE.SphereGeometry(12 + Math.random()*8, 7, 7);
+            const mat = new THREE.MeshBasicMaterial({
+                color: c,
+                transparent: true,
+                opacity: 0.025 + Math.random()*0.02,
+                side: THREE.BackSide,
+                depthWrite: false,
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(
+                (Math.random()-0.5)*30,
+                (Math.random()-0.5)*20,
+                (Math.random()-0.5)*20
+            );
+            scene.add(mesh);
+        });
+    }());
+
+    // ── Crystal Tree ─────────────────────────────────────────────
+    const treeGroup = new THREE.Group();
+    scene.add(treeGroup);
+
+    const branchMat = new THREE.MeshPhongMaterial({
+        color: 0x9B8CF6, emissive: 0x3d2a8f,
+        shininess: 120, transparent: true, opacity: 0.88,
+    });
+    const leafMat = new THREE.MeshPhongMaterial({
+        color: 0x4CC9B0, emissive: 0x1a6a58,
+        shininess: 200, transparent: true, opacity: 0.9,
+    });
+
+    function addSegment(parent, from, to, rTop, rBot) {
+        const dir = new THREE.Vector3().subVectors(to, from);
+        const len = dir.length();
+        if (len < 0.001) return;
+        dir.normalize();
+
+        const geo = new THREE.CylinderGeometry(rTop, rBot, len, 7);
+        const mesh = new THREE.Mesh(geo, branchMat.clone());
+        mesh.position.copy(from).addScaledVector(dir, len * 0.5);
+
+        const up = new THREE.Vector3(0, 1, 0);
+        if (Math.abs(dir.dot(up)) < 0.9999) {
+            mesh.quaternion.setFromUnitVectors(up, dir);
+        }
+        parent.add(mesh);
+    }
+
+    function addLeaf(parent, pos, size) {
+        const geo = new THREE.SphereGeometry(size, 9, 9);
+        const mesh = new THREE.Mesh(geo, leafMat.clone());
+        mesh.position.copy(pos);
+        parent.add(mesh);
+    }
+
+    // Trunk
+    const trunkBot = new THREE.Vector3(0, -2.8, 0);
+    const trunkTop = new THREE.Vector3(0,  1.0, 0);
+    addSegment(treeGroup, trunkBot, trunkTop, 0.07, 0.13);
+
+    // Branch levels config
+    const levels = [
+        { y: -1.4, count: 3, len: 1.3, upA: 0.65, thick: 0.055, sub: true  },
+        { y: -0.5, count: 4, len: 1.1, upA: 0.55, thick: 0.046, sub: true  },
+        { y:  0.3, count: 5, len: 0.9, upA: 0.45, thick: 0.038, sub: false },
+        { y:  0.85,count: 6, len: 0.7, upA: 0.35, thick: 0.028, sub: false },
+    ];
+
+    levels.forEach((lv, li) => {
+        for (let i = 0; i < lv.count; i++) {
+            const az = (i / lv.count) * Math.PI * 2 + li * 0.37;
+            const dir = new THREE.Vector3(
+                Math.cos(az) * Math.sin(lv.upA),
+                Math.cos(lv.upA),
+                Math.sin(az) * Math.sin(lv.upA)
+            );
+            const start = new THREE.Vector3(0, lv.y, 0);
+            const end   = start.clone().addScaledVector(dir, lv.len);
+
+            addSegment(treeGroup, start, end, lv.thick * 0.55, lv.thick);
+            addLeaf(treeGroup, end, 0.055 + (3 - li) * 0.012);
+
+            if (lv.sub) {
+                for (let j = 0; j < 3; j++) {
+                    const subAz = az + ((j / 3) - 0.5) * 1.4;
+                    const subUpA = lv.upA * 0.65;
+                    const subDir = new THREE.Vector3(
+                        Math.cos(subAz) * Math.sin(subUpA),
+                        Math.cos(subUpA),
+                        Math.sin(subAz) * Math.sin(subUpA)
+                    );
+                    const subLen = lv.len * 0.52;
+                    const subEnd = end.clone().addScaledVector(subDir, subLen);
+                    const st = lv.thick * 0.38;
+                    addSegment(treeGroup, end, subEnd, st * 0.55, st);
+                    addLeaf(treeGroup, subEnd, 0.042);
+                }
+            }
+        }
+    });
+
+    // Crown crystal
+    {
+        const geo = new THREE.ConeGeometry(0.18, 0.55, 6);
+        const mesh = new THREE.Mesh(geo, leafMat.clone());
+        mesh.position.y = 1.3;
+        treeGroup.add(mesh);
+    }
+
+    treeGroup.position.y = -0.3;
+
+    // ── Sound wave rings ─────────────────────────────────────────
+    const rings = [];
+    for (let i = 0; i < 6; i++) {
+        const geo = new THREE.TorusGeometry(1.8 + i * 0.7, 0.018, 8, 80);
+        const mat = new THREE.MeshBasicMaterial({
+            color: i % 2 === 0 ? 0x8B7CF6 : 0x4CC9B0,
+            transparent: true,
+            opacity: 0.28 - i * 0.03,
+        });
+        const ring = new THREE.Mesh(geo, mat);
+        ring.rotation.x = Math.PI / 2;
+        ring.userData = { baseOp: 0.28 - i * 0.03, phase: i * 1.05 };
+        scene.add(ring);
+        rings.push(ring);
+    }
+
+    // ── Orbiting particles ────────────────────────────────────────
+    const orbiters = [];
+    for (let i = 0; i < 16; i++) {
+        const r = 2.8 + Math.random() * 3.5;
+        const speed = 0.22 + Math.random() * 0.45;
+        const tilt  = (Math.random() - 0.5) * Math.PI * 0.7;
+        const c     = [0x4CC9B0, 0x8B7CF6, 0xC8AAFF][i % 3];
+        const size  = 0.035 + Math.random() * 0.07;
+
+        const geo  = new THREE.SphereGeometry(size, 7, 7);
+        const mat  = new THREE.MeshPhongMaterial({
+            color: c, emissive: c, emissiveIntensity: 0.6,
+            transparent: true, opacity: 0.85,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.userData = { r, speed, angle: Math.random()*Math.PI*2, tilt };
+        scene.add(mesh);
+        orbiters.push(mesh);
+    }
+
+    // ── Mouse / scroll state ──────────────────────────────────────
+    const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+    let scrollY = 0;
+
+    document.addEventListener('mousemove', e => {
+        mouse.tx =  (e.clientX / window.innerWidth  - 0.5) * 2;
+        mouse.ty = -(e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    window.addEventListener('scroll', () => { scrollY = window.scrollY; });
+
+    // ── Cursor glow ───────────────────────────────────────────────
+    const glow = document.getElementById('cursor-glow');
+    document.addEventListener('mousemove', e => {
+        glow.style.left = e.clientX + 'px';
+        glow.style.top  = e.clientY + 'px';
+    });
+
+    // ── Click spark ───────────────────────────────────────────────
+    document.addEventListener('click', e => {
+        for (let i = 0; i < 14; i++) {
+            const el = document.createElement('div');
+            el.className = 'spark';
+            const sz = 4 + Math.random() * 7;
+            const c  = Math.random() > 0.5 ? '#8B7CF6' : '#4CC9B0';
+            el.style.cssText = `width:${sz}px;height:${sz}px;background:${c};
+                left:${e.clientX}px;top:${e.clientY}px;transform:translate(-50%,-50%)`;
+            document.body.appendChild(el);
+            const a = (i / 14) * Math.PI * 2;
+            const d = 55 + Math.random() * 90;
+            el.animate([
+                { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+                { transform: `translate(calc(-50% + ${Math.cos(a)*d}px),
+                               calc(-50% + ${Math.sin(a)*d}px)) scale(0)`, opacity: 0 },
+            ], { duration: 550 + Math.random()*350, easing: 'cubic-bezier(0,.9,.57,1)',
+                 fill: 'forwards' }).onfinish = () => el.remove();
+        }
+    });
+
+    // ── Resize ───────────────────────────────────────────────────
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ── Intersection observers ────────────────────────────────────
+    const io = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.card, .step').forEach(el => io.observe(el));
+
+    // ── Stars object ref ──────────────────────────────────────────
+    const starsObj = scene.children.find(c => c.isPoints);
+
+    // ── Animate ───────────────────────────────────────────────────
+    const clock = new THREE.Clock();
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        // Smooth mouse
+        mouse.x += (mouse.tx - mouse.x) * 0.045;
+        mouse.y += (mouse.ty - mouse.y) * 0.045;
+
+        // Camera parallax + scroll drift
+        const scrollProg = scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight);
+        camera.position.x = mouse.x * 0.7;
+        camera.position.y = 0.5 + mouse.y * 0.4 - scrollProg * 1.5;
+        camera.position.z = 9 - scrollProg * 1.8;
+        camera.lookAt(0, -scrollProg * 0.5, 0);
+
+        // Tree rotation
+        treeGroup.rotation.y = t * 0.09 + mouse.x * 0.25;
+        treeGroup.rotation.x = mouse.y * 0.06;
+
+        // Stars drift
+        if (starsObj) {
+            starsObj.rotation.y = t * 0.004;
+            starsObj.rotation.x = t * 0.002;
+        }
+
+        // Rings
+        rings.forEach((ring, i) => {
+            const ph = ring.userData.phase;
+            ring.rotation.z = t * 0.08 * (i % 2 === 0 ? 1 : -1);
+            ring.scale.setScalar(1 + Math.sin(t * 0.75 + ph) * 0.025);
+            ring.material.opacity = ring.userData.baseOp *
+                (0.65 + Math.sin(t * 1.1 + ph) * 0.35);
+        });
+
+        // Orbiters
+        orbiters.forEach(o => {
+            o.userData.angle += o.userData.speed * 0.008;
+            const a = o.userData.angle;
+            const r = o.userData.r;
+            const tl = o.userData.tilt;
+            o.position.set(
+                Math.cos(a) * r,
+                Math.sin(a) * Math.sin(tl) * r * 0.5 - 0.3,
+                Math.sin(a) * Math.cos(tl) * r * 0.35
+            );
+        });
+
+        // Breathing lights
+        coreLight.intensity   = 0.6 + Math.sin(t * 1.8)         * 0.35;
+        purpleLight.intensity = 3.2 + Math.sin(t * 1.2 + 1.0)   * 0.7;
+        tealLight.intensity   = 1.8 + Math.sin(t * 1.55 + 2.1)  * 0.5;
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+}());
+</script>
+</body>
+</html>
